@@ -1,6 +1,6 @@
 import { useContext, useEffect, useState } from 'react';
 import { EditorContext } from './EditorContext';
-import Canvas, { CanvasRenderingContext2D } from 'react-native-canvas';
+import Canvas, { CanvasRenderingContext2D, Image } from 'react-native-canvas';
 import { Dimensions } from 'react-native';
 
 interface IProps {
@@ -13,6 +13,7 @@ const options = {
 }
 
 export const useEditor = ({ canvas }: IProps) => {
+    const [lastImage, setLastImage] = useState<Image>()
     const { figures, resetFigures, undo, redo, ...rest } = useContext(EditorContext);
     const [ctx, setCtx] = useState<CanvasRenderingContext2D>();
 
@@ -29,7 +30,7 @@ export const useEditor = ({ canvas }: IProps) => {
     }, [figures, ctx]);
 
     const render = (withClear: boolean = true) => {
-        if (ctx) {
+        if (ctx && canvas) {
             if (withClear) {
                 clear();
             }
@@ -67,6 +68,8 @@ export const useEditor = ({ canvas }: IProps) => {
         figures,
         onRedo,
         onUndo,
+        setLastImage,
+        lastImage,
         ...rest,
     };
 }
