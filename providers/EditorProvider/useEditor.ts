@@ -2,9 +2,11 @@ import { useContext, useEffect, useState } from 'react';
 import { EditorContext } from './EditorContext';
 import Canvas, { CanvasRenderingContext2D, Image } from 'react-native-canvas';
 import { Dimensions } from 'react-native';
+import { IRenderable } from './partials';
 
 interface IProps {
     canvas: Canvas | null;
+    renderedCanvas: Canvas | null;
 }
 
 const options = {
@@ -12,10 +14,16 @@ const options = {
     height: Dimensions.get('window').height,
 }
 
-export const useEditor = ({ canvas }: IProps) => {
-    const [lastImage, setLastImage] = useState<Image>()
-    const { figures, resetFigures, undo, redo, ...rest } = useContext(EditorContext);
+export const useEditor = ({ canvas, renderedCanvas }: IProps) => {
+    const { figures, resetFigures, undo, redo, needRerender, ...rest } = useContext(EditorContext);
     const [ctx, setCtx] = useState<CanvasRenderingContext2D>();
+    const [renderedCtx, setRenderedCtx] = useState<CanvasRenderingContext2D>();
+
+    useEffect(() => {
+        if (needRerender) {
+            fullRender();
+        }
+    }, [needRerender, figures]);
 
     useEffect(() => {
         if (canvas) {
@@ -26,39 +34,51 @@ export const useEditor = ({ canvas }: IProps) => {
     }, [canvas]);
 
     useEffect(() => {
-        render();
-    }, [figures, ctx]);
+        if (renderedCanvas) {
+            renderedCanvas.width = options.width;
+            renderedCanvas.height = options.height;
+            setRenderedCtx(renderedCanvas.getContext('2d'));
+        }
+    }, [renderedCanvas]);
 
-    const render = (withClear: boolean = true) => {
-        if (ctx && canvas) {
+    const prerender = async (withClear: boolean = true) => {
+        if (ctx) {
             if (withClear) {
-                clear();
+                clear(ctx);
             }
-            figures.forEach(figure => figure.render(ctx));
+
+            if (figures.length) {
+                await figures[figures.length - 1].render(ctx);
+            }
         }
     }
 
-    const clear = () => {
+    const render = async () => {
+        if (renderedCtx && figures[figures.length - 1]) {
+            await figures[figures.length - 1].render(renderedCtx);
+        }
+    }
+
+    const clear = (ctx: CanvasRenderingContext2D) => {
         if (ctx) {
             ctx.clearRect(0, 0, options.width, options.height);
         }
     }
 
     const clearWithFigures = () => {
-        if (ctx) {
-            ctx.clearRect(0, 0, options.width, options.height);
+        if (renderedCtx && ctx) {
+            clear(renderedCtx);
+            clear(ctx);
             resetFigures();
         }
     }
 
-    const onUndo = () => {
-        undo();
-        render();
-    }
-
-    const onRedo = () => {
-        redo();
-        render();
+    const fullRender = () => {
+        if (renderedCtx && ctx) {
+            clear(renderedCtx);
+            clear(ctx);
+            figures.forEach(fig => fig.render(renderedCtx))
+        }
     }
 
     return {
@@ -66,10 +86,10 @@ export const useEditor = ({ canvas }: IProps) => {
         render,
         clearWithFigures,
         figures,
-        onRedo,
-        onUndo,
-        setLastImage,
-        lastImage,
+        undo,
+        redo,
+        prerender,
+        renderedCtx,
         ...rest,
     };
 }

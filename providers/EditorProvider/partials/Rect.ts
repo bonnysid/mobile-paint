@@ -19,7 +19,7 @@ export class Rect extends Figure implements IRenderable {
         this.lineWidth = props.lineWidth;
     }
 
-    public render(ctx: CanvasRenderingContext2D): void {
+    public async render(ctx: CanvasRenderingContext2D) {
         ctx.beginPath();
 
         if (this.style === FigureStyle.STROKE) {

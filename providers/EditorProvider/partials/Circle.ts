@@ -16,7 +16,7 @@ export class Circle extends Figure implements IRenderable {
         this.lineWidth = props.lineWidth;
     }
 
-    public render(ctx: CanvasRenderingContext2D): void {
+    public async render(ctx: CanvasRenderingContext2D) {
         ctx.beginPath();
 
         ctx.arc(this.x, this.y, this.radius,0,Math.PI*2,true);

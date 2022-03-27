@@ -15,6 +15,7 @@ export interface IEditorContext {
     redo: () => void;
     disabledUndo: boolean;
     disabledRedo: boolean;
+    needRerender: boolean;
 }
 
 const initialState: IEditorContext = {
@@ -25,6 +26,7 @@ const initialState: IEditorContext = {
     redo: () => {},
     disabledRedo: true,
     disabledUndo: true,
+    needRerender: false,
 }
 
 export const EditorContext = createContext<IEditorContext>(initialState)
