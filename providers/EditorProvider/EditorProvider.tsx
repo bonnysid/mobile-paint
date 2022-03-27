@@ -1,4 +1,4 @@
-import { FC, useState } from 'react';
+import { FC, useEffect, useState } from 'react';
 import { EditorContext, IUndoRedo } from './EditorContext';
 import { IRenderable } from './partials';
 import uuid from 'react-native-uuid';
@@ -7,6 +7,7 @@ export const EditorProvider: FC = ({ children }) => {
     const [undoStack, setUndoStack] = useState<IUndoRedo[]>([]);
     const [redoStack, setRedoStack] = useState<IUndoRedo[]>([]);
     const [figures, setFigures] = useState<IRenderable[]>([]);
+    const [needRerender, setNeedRerender] = useState<boolean>(false);
 
     const addFigure = (figure: IRenderable) => {
         setFigures(prev => [...prev, figure]);
@@ -17,7 +18,8 @@ export const EditorProvider: FC = ({ children }) => {
                 undo: () => setFigures(prev => prev.filter(fig => figure.id !== fig.id)),
                 redo: () => setFigures(prev => [...prev, figure]),
             }
-        ])
+        ]);
+        setNeedRerender(false);
     };
 
     const undo = () => {
@@ -26,6 +28,7 @@ export const EditorProvider: FC = ({ children }) => {
             functions.undo();
             setUndoStack(prev => prev.filter(undo => undo.id !== functions.id));
             setRedoStack(prev => [...prev, functions]);
+            setNeedRerender(true);
         }
     }
 
@@ -35,6 +38,7 @@ export const EditorProvider: FC = ({ children }) => {
             functions.redo();
             setRedoStack(prev => prev.filter(redo => redo.id !== functions.id));
             setUndoStack(prev => [...prev, functions]);
+            setNeedRerender(true);
         }
     }
 
@@ -60,6 +64,7 @@ export const EditorProvider: FC = ({ children }) => {
                 redo,
                 disabledRedo: !redoStack.length,
                 disabledUndo: !undoStack.length,
+                needRerender
             }}
         >
             {children}

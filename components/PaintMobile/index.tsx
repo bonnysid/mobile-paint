@@ -14,6 +14,7 @@ export const PaintMobile: FC = () => {
     const [currentFigure, setCurrentFigure] = useState<Figure | Brush | null>(null);
     const [startPos, setStartPos] = useState<IPos>({ x: 0, y: 0});
     const [canvas, setCanvas] = useState<Canvas | null>(null);
+    const [renderedCanvas, setRenderedCanvas] = useState<Canvas | null>(null);
     const { selectedBrush, selectedColor, selectedLineWidth, figureStyle } = usePaintMenu();
     const {
         addFigure,
@@ -21,10 +22,12 @@ export const PaintMobile: FC = () => {
         clearWithFigures,
         disabledUndo,
         disabledRedo,
-        onRedo,
-        onUndo,
+        redo,
+        undo,
+        prerender,
         ctx,
-    } = useEditor({ canvas });
+        renderedCtx,
+    } = useEditor({ canvas, renderedCanvas });
     const canvasWrapper = useRef<View>(null);
 
     useEffect(() => {
@@ -74,7 +77,7 @@ export const PaintMobile: FC = () => {
                 }));
                 break;
             case BrushNames.BRUSH:
-                setCurrentFigure(new Brush({ width: selectedLineWidth, color: selectedColor, ctx }));
+                setCurrentFigure(new Brush({ width: selectedLineWidth, color: selectedColor, ctx, renderedCtx }));
                 break;
         }
     }
@@ -98,14 +101,16 @@ export const PaintMobile: FC = () => {
                     break;
                 default: break;
             }
-            withRender && render();
+            withRender && prerender();
         }
     }
 
     const onTouchEnd = (e: GestureResponderEvent) => {
-        if (currentFigure && ctx) {
+        if (currentFigure && renderedCtx && ctx) {
             setCurrentFigure(null);
+            renderedCtx.beginPath();
             ctx.beginPath();
+            render();
         }
     }
 
@@ -159,8 +164,9 @@ export const PaintMobile: FC = () => {
             onTouchMove={onTouchMove}
         >
             <Menu clear={clearWithFigures} />
-            <Canvas ref={setCanvas} />
-            <BottomMenu disabledRedo={disabledRedo} disabledUndo={disabledUndo} redo={onRedo} undo={onUndo} />
+            <Canvas ref={setCanvas} style={styles.canvas} />
+            <Canvas ref={setRenderedCanvas} style={styles.renderedCanvas} />
+            <BottomMenu disabledRedo={disabledRedo} disabledUndo={disabledUndo} redo={redo} undo={undo} />
         </View>
     )
 }
@@ -168,5 +174,15 @@ export const PaintMobile: FC = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
+    },
+
+    renderedCanvas: {
+        position: 'absolute',
+        zIndex: 1,
+    },
+
+    canvas: {
+        position: 'absolute',
+        zIndex: 2,
     }
 })

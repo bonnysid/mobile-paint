@@ -3,7 +3,8 @@ import uuid from 'react-native-uuid';
 
 export interface IRenderable {
     id: string;
-    render: (ctx: CanvasRenderingContext2D) => void;
+    render: (ctx: CanvasRenderingContext2D) => Promise<void>;
+    withoutRender?: boolean;
 }
 
 export enum FigureStyle {
@@ -33,5 +34,5 @@ export class Figure implements IRenderable {
         this.style = props.style || FigureStyle.STROKE;
     }
 
-    render(ctx: CanvasRenderingContext2D): void {}
+    public async render(ctx: CanvasRenderingContext2D) {}
 }

@@ -19,7 +19,7 @@ export class Line extends Figure implements IRenderable {
         this.width = props.width || 3;
     }
 
-    render(ctx: CanvasRenderingContext2D): void {
+    public async render(ctx: CanvasRenderingContext2D) {
         ctx.beginPath();
 
         ctx.moveTo(this.x, this.y);
