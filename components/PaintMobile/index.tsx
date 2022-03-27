@@ -1,7 +1,7 @@
 import { FC, useEffect, useRef, useState } from 'react';
 import { GestureResponderEvent, NativeTouchEvent, StyleSheet, View } from 'react-native';
 import { Brush, BrushNames, Circle, Figure, Line, Rect, useEditor, usePaintMenu } from '../../providers';
-import Canvas from 'react-native-canvas';
+import Canvas, { Image as CanvasImage } from 'react-native-canvas';
 import { Menu } from '../Menu';
 import { BottomMenu } from '../BottomMenu';
 
@@ -22,7 +22,8 @@ export const PaintMobile: FC = () => {
         disabledUndo,
         disabledRedo,
         onRedo,
-        onUndo
+        onUndo,
+        ctx,
     } = useEditor({ canvas });
     const canvasWrapper = useRef<View>(null);
 
@@ -73,14 +74,14 @@ export const PaintMobile: FC = () => {
                 }));
                 break;
             case BrushNames.BRUSH:
-                setCurrentFigure(new Brush({ width: selectedLineWidth, color: selectedColor }));
+                setCurrentFigure(new Brush({ width: selectedLineWidth, color: selectedColor, ctx }));
                 break;
         }
     }
 
     const onTouchMove = (e: GestureResponderEvent) => {
         if (currentFigure) {
-            const withClear = selectedBrush !== BrushNames.BRUSH;
+            const withRender = selectedBrush !== BrushNames.BRUSH;
             const touch = e.nativeEvent.touches[0];
             switch (selectedBrush) {
                 case BrushNames.RECT:
@@ -97,13 +98,14 @@ export const PaintMobile: FC = () => {
                     break;
                 default: break;
             }
-            render(withClear);
+            withRender && render();
         }
     }
 
     const onTouchEnd = (e: GestureResponderEvent) => {
-        if (currentFigure) {
+        if (currentFigure && ctx) {
             setCurrentFigure(null);
+            ctx.beginPath();
         }
     }
 
